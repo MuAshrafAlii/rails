@@ -5,7 +5,22 @@ class PostsController < ApplicationController
 
   # GET /users/1/posts
   def index
-    render json: @posts
+    page_number = params[:page] || 1
+    per_page = params[:per_page] || 10
+    offset = (page_number.to_i - 1) * per_page.to_i
+  
+    total_posts = @posts.count
+    paginated_posts = @posts.limit(per_page).offset(offset)
+  
+    render json: {
+      posts: paginated_posts,
+      pagination: {
+        current_page: page_number.to_i,
+        per_page: per_page.to_i,
+        total_pages: (total_posts.to_f / per_page.to_i).ceil,
+        total_posts: total_posts
+      }
+    }
   end
 
   # GET /posts/1 or /posts/1.json
@@ -36,8 +51,22 @@ end
 
 # GET /posts/top
 def top
-  @top_posts = Post.order(created_at: :desc).limit(10) # Fetch top 10 posts, adjust the limit as needed
-  render json: @top_posts
+  page_number = params[:page] || 1
+  per_page = params[:per_page] || 10
+  offset = (page_number.to_i - 1) * per_page.to_i
+
+  total_top_posts = Post.count # Get total count of top posts
+  top_posts = Post.order(created_at: :desc).limit(per_page).offset(offset)
+
+  render json: {
+    top_posts: top_posts,
+    pagination: {
+      current_page: page_number.to_i,
+      per_page: per_page.to_i,
+      total_pages: (total_top_posts.to_f / per_page.to_i).ceil,
+      total_top_posts: total_top_posts
+    }
+  }
 end
 
   # PATCH/PUT /posts/1 or /posts/1.json
